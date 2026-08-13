@@ -1,4 +1,5 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { supabase } from './supabase';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL as string || 'http://localhost:3001/api',
@@ -8,10 +9,11 @@ const apiClient = axios.create({
   }
 });
 
-// Interceptor para agregar token
+// Interceptor para agregar token de la sesión de Supabase
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('supabase.auth.token');
+  async (config: InternalAxiosRequestConfig) => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,9 +25,9 @@ apiClient.interceptors.request.use(
 // Interceptor para errores
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      localStorage.clear();
+      await supabase.auth.signOut();
       window.location.href = '/login';
     }
     return Promise.reject(error);

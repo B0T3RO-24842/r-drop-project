@@ -1,4 +1,5 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabase";
 import "../Auth.css";
@@ -7,18 +8,15 @@ const UpdatePassword = () => {
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [tokenValido, setTokenValido] = useState(true);
 
-  useEffect(() => {
-    // Detecta si el link llegó con error (token expirado)
-    const hash = window.location.hash;
-    if (hash.includes("error=access_denied") || hash.includes("otp_expired")) {
-      setTokenValido(false);
-      setError("El enlace expiró o ya fue usado. Solicita uno nuevo.");
-    }
-  }, []);
+  // Detecta si el link llegó con error (token expirado)
+  const hash = window.location.hash;
+  const tokenExpirado = hash.includes("error=access_denied") || hash.includes("otp_expired");
+  const [tokenValido] = useState(!tokenExpirado);
+  const [error, setError] = useState<string | null>(
+    tokenExpirado ? "El enlace expiró o ya fue usado. Solicita uno nuevo." : null
+  );
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

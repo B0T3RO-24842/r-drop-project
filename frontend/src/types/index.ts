@@ -4,9 +4,11 @@ export interface User {
     id: string;
     nombre_completo: string;
     email: string;
+    foto_perfil?: string;
+    rol?: string;
     puntos_fiabilidad: number;
-    nivel_vendedor: 'estandar' | 'pro';
-    verificado: boolean;
+    nivel_vendedor?: 'estandar' | 'pro';
+    verificado?: boolean;
   }
   
   export interface Product {

@@ -1,4 +1,5 @@
-import { useState, FormEvent } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "../Auth.css";
@@ -18,8 +19,8 @@ const ForgotPassword = () => {
     try {
       await resetPassword(email);
       setMessage("Se ha enviado un enlace a tu correo para restablecer la contraseña.");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
