@@ -10,17 +10,7 @@ const Dashboard = () => {
     return user.nombre_completo.charAt(0).toUpperCase();
   };
 
-  const orders = [
-    { id: "#00123", product: "Nike Air Max 90", status: "En tránsito", date: "2026-03-08", price: "$89.00" },
-    { id: "#00122", product: "Camiseta Vintage", status: "Entregado", date: "2026-03-01", price: "$22.00" },
-    { id: "#00121", product: "Auriculares BT Pro", status: "Inspeccionando", date: "2026-02-25", price: "$45.00" },
-  ];
-
-  const statusColor: Record<string, string> = {
-    "En tránsito": "#3b82f6",
-    "Entregado": "#22c55e",
-    "Inspeccionando": "#f59e0b",
-  };
+  const orders: never[] = [];
 
   return (
     <div className="dashboard">
@@ -107,17 +97,11 @@ const Dashboard = () => {
               <span>Fecha</span>
               <span>Precio</span>
             </div>
-            {orders.map((o) => (
-              <div className="table-row" key={o.id}>
-                <span className="order-id">{o.id}</span>
-                <span className="order-product">{o.product}</span>
-                <span className="order-status" style={{ color: statusColor[o.status] }}>
-                  ● {o.status}
-                </span>
-                <span className="order-date">{o.date}</span>
-                <span className="order-price">{o.price}</span>
+            {orders.length === 0 && (
+              <div className="table-row" style={{ justifyContent: "center", color: "#555" }}>
+                Aún no tienes actividad. Explora productos para empezar.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </main>

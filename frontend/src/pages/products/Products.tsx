@@ -1,28 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { listarProductos } from "../../services/productos";
+import { obtenerCatalogos } from "../../services/catalogos";
+import type { Product, Categoria } from "../../types";
 import "./Products.css";
 
-const PRODUCTS = [
-  { id: 1, name: "Nike Air Max 90 Retro", price: "$89.00", original: "$145.00", category: "Sneakers", rating: 4.8, reviews: 234, emoji: "👟" },
-  { id: 2, name: "Camiseta Oversized Vintage", price: "$18.00", original: "$35.00", category: "Ropa", rating: 4.5, reviews: 89, emoji: "👕" },
-  { id: 3, name: "Auriculares BT Pro X", price: "$45.00", original: "$89.00", category: "Electrónica", rating: 4.7, reviews: 412, emoji: "🎧" },
-  { id: 4, name: "Mochila Urban Cargo", price: "$32.00", original: "$60.00", category: "Accesorios", rating: 4.6, reviews: 178, emoji: "🎒" },
-  { id: 5, name: "Smartwatch Series 8 Clone", price: "$55.00", original: "$120.00", category: "Electrónica", rating: 4.3, reviews: 320, emoji: "⌚" },
-  { id: 6, name: "Pantalón Cargo Tactical", price: "$28.00", original: "$55.00", category: "Ropa", rating: 4.4, reviews: 95, emoji: "👖" },
-  { id: 7, name: "Sudadera Streetwear", price: "$24.00", original: "$48.00", category: "Ropa", rating: 4.6, reviews: 143, emoji: "🧥" },
-  { id: 8, name: "Figura Coleccionable Anime", price: "$15.00", original: "$30.00", category: "Accesorios", rating: 4.9, reviews: 567, emoji: "🎎" },
-];
-
-const CATEGORIES = ["Todos", "Sneakers", "Ropa", "Electrónica", "Accesorios"];
-
 const Products = () => {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("Todos");
+  // Leer categoría de la URL si viene del Home
+  const params = new URLSearchParams(window.location.search);
+  const categoriaInicial = params.get("categoria");
 
-  const filtered = PRODUCTS.filter((p) => {
-    const matchCat = category === "Todos" || p.category === category;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const [productos, setProductos] = useState<Product[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [search, setSearch] = useState("");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(
+    categoriaInicial ? parseInt(categoriaInicial, 10) : null
+  );
+  const [pagina, setPagina] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cargar catálogos al montar
+  useEffect(() => {
+    obtenerCatalogos().then((res) => {
+      if (res.success && res.data) {
+        setCategorias(res.data.categorias);
+      }
+    });
+  }, []);
+
+  // Cargar productos cada vez que cambian los filtros
+  const cargarProductos = useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const res = await listarProductos({
+        search: search || undefined,
+        id_categoria: categoriaSeleccionada ?? undefined,
+        page: pagina,
+        limite: 12,
+        ordenar_por: "created_at",
+        direccion: "desc",
+      });
+      if (res.success && res.data) {
+        setProductos(res.data);
+        setTotalPaginas(res.pagination.paginas);
+      } else {
+        setError(res.error || "Error al cargar productos");
+      }
+    } catch {
+      setError("Error de conexión con el servidor");
+    } finally {
+      setCargando(false);
+    }
+  }, [search, categoriaSeleccionada, pagina]);
+
+  useEffect(() => {
+    cargarProductos();
+  }, [cargarProductos]);
+
+  // Resetear a página 1 al cambiar filtros
+  useEffect(() => {
+    setPagina(1);
+  }, [search, categoriaSeleccionada]);
+
+  const handleBuscar = (valor: string) => {
+    setSearch(valor);
+  };
 
   return (
     <div className="products-page">
@@ -33,54 +77,99 @@ const Products = () => {
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Busca en Taobao, 1688, Weidian..."
+            placeholder="Busca por nombre, marca..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleBuscar(e.target.value)}
           />
         </div>
       </div>
 
       <div className="products-body">
-        {/* Filters */}
+        {/* Filtros de categoría */}
         <aside className="filters">
           <h3>Categorías</h3>
           <div className="filter-list">
-            {CATEGORIES.map((c) => (
+            <button
+              className={`filter-btn ${categoriaSeleccionada === null ? "active" : ""}`}
+              onClick={() => setCategoriaSeleccionada(null)}
+            >
+              Todos
+            </button>
+            {categorias.map((c) => (
               <button
-                key={c}
-                className={`filter-btn ${category === c ? "active" : ""}`}
-                onClick={() => setCategory(c)}
+                key={c.id_categoria}
+                className={`filter-btn ${categoriaSeleccionada === c.id_categoria ? "active" : ""}`}
+                onClick={() => setCategoriaSeleccionada(c.id_categoria)}
               >
-                {c}
+                {c.nombre_categoria}
               </button>
             ))}
           </div>
         </aside>
 
-        {/* Grid */}
+        {/* Grid de productos */}
         <div className="products-grid">
-          {filtered.map((p) => (
-            <div className="product-card" key={p.id}>
-              <div className="product-img">{p.emoji}</div>
+          {cargando && (
+            <div className="no-results">Cargando productos...</div>
+          )}
+
+          {error && (
+            <div className="no-results">{error}</div>
+          )}
+
+          {!cargando && !error && productos.map((p) => (
+            <div className="product-card" key={p.id_producto}>
+              <div className="product-img">
+                {p.fotos && p.fotos.length > 0 ? (
+                  <img src={p.fotos[0]} alt={p.titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  "📦"
+                )}
+              </div>
               <div className="product-info">
-                <span className="product-category">{p.category}</span>
-                <h3 className="product-name">{p.name}</h3>
-                <div className="product-rating">
-                  ⭐ {p.rating} <span>({p.reviews})</span>
-                </div>
+                <span className="product-category">
+                  {p.categoria?.nombre_categoria}
+                </span>
+                <h3 className="product-name">{p.titulo}</h3>
+                {p.marca && (
+                  <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.marca}</span>
+                )}
                 <div className="product-prices">
-                  <span className="price-current">{p.price}</span>
-                  <span className="price-original">{p.original}</span>
+                  <span className="price-current">${p.precio.toLocaleString("es-CO")}</span>
                 </div>
-                <button className="add-cart-btn">Agregar al carrito</button>
+                <button className="add-cart-btn">Ver detalle</button>
               </div>
             </div>
           ))}
-          {filtered.length === 0 && (
-            <div className="no-results">No se encontraron productos 😅</div>
+
+          {!cargando && !error && productos.length === 0 && (
+            <div className="no-results">No se encontraron productos</div>
           )}
         </div>
       </div>
+
+      {/* Paginación */}
+      {totalPaginas > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", padding: "1rem 0 2rem" }}>
+          <button
+            className="filter-btn"
+            disabled={pagina === 1}
+            onClick={() => setPagina((p) => p - 1)}
+          >
+            Anterior
+          </button>
+          <span style={{ color: "#777", padding: "0.5rem 0.75rem", fontSize: "0.9rem" }}>
+            {pagina} / {totalPaginas}
+          </span>
+          <button
+            className="filter-btn"
+            disabled={pagina === totalPaginas}
+            onClick={() => setPagina((p) => p + 1)}
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
     </div>
   );
 };

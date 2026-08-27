@@ -3,12 +3,11 @@ import "./Home.css";
 
 const Home = () => {
   const categories = [
-    { icon: "👟", name: "Sneakers" },
-    { icon: "👗", name: "Ropa" },
-    { icon: "💻", name: "Electrónica" },
-    { icon: "🎒", name: "Accesorios" },
-    { icon: "🏠", name: "Hogar" },
-    { icon: "🎮", name: "Gaming" },
+    { icon: "🔥", name: "Urbana", id: 1 },
+    { icon: "💎", name: "Lujo", id: 2 },
+    { icon: "🏃", name: "Deportiva", id: 3 },
+    { icon: "👕", name: "Casual", id: 4 },
+    { icon: "⌚", name: "Accesorios", id: 5 },
   ];
 
   const features = [
@@ -51,7 +50,7 @@ const Home = () => {
         <h2 className="section-title">Categorías populares</h2>
         <div className="categories-grid">
           {categories.map((cat) => (
-            <Link to="/products" key={cat.name} className="category-card">
+            <Link to={`/products?categoria=${cat.id}`} key={cat.name} className="category-card">
               <span className="cat-icon">{cat.icon}</span>
               <span className="cat-name">{cat.name}</span>
             </Link>
