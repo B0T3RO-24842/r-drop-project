@@ -1,17 +1,23 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, Navigate } from "react-router-dom";
 import { supabase } from "../../config/supabase";
 import { useAuth } from "../../context/AuthContext";
 import "../Auth.css";
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const message = searchParams.get("message");
+
+  // Si ya hay sesión, no mostrar el login (respetando el rol)
+  if (!authLoading && user) {
+    const destino = (user.rol === "vendedor" || user.rol === "admin") ? "/dashboard" : "/products";
+    return <Navigate to={destino} replace />;
+  }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,7 +31,11 @@ const Login = () => {
     try {
       await login(form.email, form.password);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("No se pudo iniciar sesión. Intenta de nuevo.");
+      }
     } finally {
       setLoading(false);
     }

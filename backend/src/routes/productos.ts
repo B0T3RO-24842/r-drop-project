@@ -2,12 +2,13 @@ import { Router } from 'express';
 import * as controller from '../controllers/productos';
 import { authenticate } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { CrearProductoSchema, ActualizarProductoSchema } from '../utils/validaciones';
+import { CrearProductoSchema, ActualizarProductoSchema, SubirFotoSchema } from '../utils/validaciones';
 
 const router = Router();
 
 // ⚠️ Rutas específicas ANTES de /:id (Express las matchea en orden)
 router.get('/mis-productos', authenticate, controller.misProductos);
+router.post('/upload-foto', authenticate, validate(SubirFotoSchema), controller.subirFoto);
 
 // Rutas públicas
 router.get('/', controller.listar);

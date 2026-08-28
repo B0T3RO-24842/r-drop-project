@@ -45,6 +45,20 @@ export async function estadosProducto(_req: AuthRequest, res: Response): Promise
   res.json({ success: true, data });
 }
 
+// GET /api/catalogos/tipos-documento
+export async function tiposDocumento(_req: AuthRequest, res: Response): Promise<void> {
+  const { data, error } = await supabase
+    .from('tipo_documento')
+    .select('*')
+    .order('id_tipo_doc');
+
+  if (error) {
+    res.status(500).json({ success: false, error: 'Error al obtener tipos de documento' });
+    return;
+  }
+  res.json({ success: true, data });
+}
+
 // GET /api/catalogos/todos
 // Devuelve todos los catálogos en una sola llamada (evita 3 requests separados)
 export async function todos(_req: AuthRequest, res: Response): Promise<void> {

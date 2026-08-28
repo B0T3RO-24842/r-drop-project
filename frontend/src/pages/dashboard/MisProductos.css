@@ -1,0 +1,247 @@
+.misproductos-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  font-family: 'DM Sans', sans-serif;
+  color: #f0f0f0;
+  text-align: left;
+}
+
+.misproductos-loading {
+  padding: 3rem;
+  text-align: center;
+  color: #888;
+}
+
+.misproductos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.misproductos-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  color: #f0f0f0;
+}
+
+.misproductos-sub { color: #777; margin: 0.25rem 0 0; }
+
+.misproductos-ver {
+  background: #141414;
+  border: 1px solid #2e2e33;
+  color: #d1d5db;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.misproductos-ver:hover { border-color: #aa3bff; color: #f0f0f0; }
+
+.misproductos-msg {
+  padding: 0.75rem 1.1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+.misproductos-msg.ok { background: #16a34a1a; border: 1px solid #16a34a44; color: #4ade80; }
+.misproductos-msg.err { background: #dc26261a; border: 1px solid #dc262644; color: #fca5a5; }
+
+/* Aviso: no vendedor */
+.misproductos-aviso {
+  background: #141414;
+  border: 1px solid #2e2e33;
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+}
+.misproductos-aviso h3 { margin: 0 0 0.5rem; color: #f0f0f0; }
+.misproductos-aviso p { color: #9ca3af; max-width: 480px; margin: 0 auto 1.25rem; }
+
+.misproductos-btn {
+  display: inline-block;
+  background: #aa3bff;
+  color: #fff;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Formulario */
+.misproductos-form {
+  background: #141414;
+  border: 1px solid #2e2e33;
+  border-radius: 14px;
+  padding: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.misproductos-form h2,
+.misproductos-lista h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem;
+  color: #f0f0f0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 1.25rem;
+}
+
+.mp-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #d1d5db;
+}
+.mp-marca { grid-column: 1 / 2; }
+.mp-descripcion { grid-column: 1 / -1; }
+
+.mp-label input,
+.mp-label select,
+.mp-label textarea {
+  background: #101012;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  color: #f3f4f6;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+.mp-label input:focus,
+.mp-label select:focus,
+.mp-label textarea:focus { border-color: #aa3bff; }
+.mp-label textarea { resize: vertical; }
+
+/* Fotos */
+.mp-fotos { margin-top: 1.25rem; }
+
+.mp-fotos-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.mp-foto-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border: 1.5px dashed #3f3f46;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.mp-foto-upload:hover { border-color: #aa3bff; color: #f0f0f0; }
+.mp-foto-upload input { display: none; }
+
+.mp-foto-preview {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #2e2e33;
+}
+.mp-foto-preview img { width: 100%; height: 100%; object-fit: cover; }
+.mp-foto-preview button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.misproductos-publicar {
+  margin-top: 1.5rem;
+  background: #aa3bff;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.misproductos-publicar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Lista de productos */
+.misproductos-vacio {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+}
+
+.misproductos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+.mp-card {
+  background: #141414;
+  border: 1px solid #2e2e33;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.mp-card:hover { border-color: #aa3bff; transform: translateY(-2px); }
+
+.mp-card-img {
+  height: 180px;
+  background: #0d0d0d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 0.85rem;
+}
+.mp-card-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.mp-card-body { padding: 0.85rem; }
+
+.mp-card-titulo {
+  font-size: 0.9rem;
+  color: #e5e5e5;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.35rem;
+}
+
+.mp-card-precio { font-size: 0.95rem; font-weight: 700; color: #f0f0f0; margin-bottom: 0.4rem; }
+
+.mp-card-estado { font-size: 0.72rem; font-weight: 600; }
+.mp-card-estado.ok { color: #22c55e; }
+.mp-card-estado.no { color: #888; }
+
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .mp-marca { grid-column: auto; }
+}

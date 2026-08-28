@@ -12,6 +12,8 @@ import Register from './pages/register/Register'
 import ForgotPassword from './pages/login/ForgotPassword'
 import UpdatePassword from './pages/login/UpdatePassword'
 import Dashboard from './pages/dashboard/Dashboard'
+import Perfil from './pages/dashboard/Perfil'
+import MisProductos from './pages/dashboard/MisProductos'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -26,6 +28,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/dashboard/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
+            <Route path="/dashboard/productos" element={<PrivateRoute><MisProductos /></PrivateRoute>} />
           </Route>
         </Routes>
       </AuthProvider>

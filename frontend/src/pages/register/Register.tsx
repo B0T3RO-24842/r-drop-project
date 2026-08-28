@@ -1,16 +1,22 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { supabase } from "../../config/supabase";
 import { useAuth } from "../../context/AuthContext";
 import "../Auth.css";
 
 const Register = () => {
-  const { signup } = useAuth();
+  const { signup, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Si ya hay sesión (registro con login automático), ir al destino según rol
+  if (!authLoading && user) {
+    const destino = (user.rol === "vendedor" || user.rol === "admin") ? "/dashboard" : "/products";
+    return <Navigate to={destino} replace />;
+  }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,6 +37,8 @@ const Register = () => {
     setLoading(true);
     try {
       await signup(form.email, form.password, form.name);
+      // Si no hubo sesión automática (confirmación de email activa),
+      // redirigir al login con el mensaje de revisar el correo.
       navigate("/login?message=revisa_tu_correo");
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);

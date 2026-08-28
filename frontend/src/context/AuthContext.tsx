@@ -11,52 +11,93 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const cargarPerfil = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("*")
-        .eq("id", userId)
-        .single();
-      if (error) {
-        console.error("Error cargando perfil:", error.message);
-        setUser(null);
-        return;
-      }
-      setUser(data);
-    } catch {
-      setUser(null);
+  // Carga (o crea) el perfil en la tabla `usuarios` a partir de la sesión de Supabase.
+  // Nunca anula `setUser(null)` por un fallo de DB: mantiene al menos los datos mínimos
+  // de la sesión como fuente de verdad, evitando que se "cierre solo" la sesión.
+  const sincronizarPerfil = async (authUser: {
+    id: string;
+    email?: string | null;
+    user_metadata?: Record<string, unknown>;
+  }): Promise<User | null> => {
+    const { data: perfil, error: errPerfil } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    if (perfil) {
+      setUser(perfil as User);
+      return perfil as User;
     }
+
+    // El perfil no existe: intentar crearlo desde los datos de la sesión.
+    if (errPerfil && errPerfil.code !== "PGRST116") {
+      console.error("Error buscando perfil:", errPerfil.message);
+    }
+
+    const nombre = (authUser.user_metadata?.nombre_completo as string | undefined)
+      ?? authUser.email?.split("@")[0]
+      ?? "Usuario";
+
+    const { data: creado, error: errCrear } = await supabase
+      .from("usuarios")
+      .upsert({
+        id: authUser.id,
+        email: authUser.email ?? "",
+        nombre_completo: nombre,
+        rol: "comprador",
+        puntos_fiabilidad: 0,
+      }, { onConflict: "id" })
+      .select()
+      .single();
+
+    if (!errCrear && creado) {
+      setUser(creado as User);
+      return creado as User;
+    }
+
+    // Si no se pudo crear ni leer, conservamos un perfil mínimo para no expulsar.
+    console.error("No se pudo sincronizar el perfil:", errCrear?.message);
+    const minimo: User = {
+      id: authUser.id,
+      email: authUser.email ?? "",
+      nombre_completo: nombre,
+      rol: "comprador",
+      puntos_fiabilidad: 0,
+    };
+    setUser(minimo);
+    return minimo;
   };
 
   useEffect(() => {
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
+    const aplicarSesion = async (session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } } | null) => {
+      if (!mounted) return;
+      if (session?.user) {
+        await sincronizarPerfil(session.user);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    };
 
-        if (event === "SIGNED_OUT" || !session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!mounted) return;
+        // SIGNED_OUT siempre limpia. Los demás eventos refrescan el perfil.
+        if (event === "SIGNED_OUT") {
           setUser(null);
           setLoading(false);
           return;
         }
-
-        if (session?.user) {
-          await cargarPerfil(session.user.id);
-        }
-
-        setLoading(false);
+        aplicarSesion(session);
       }
     );
 
-    // Verificar sesión inicial explícitamente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      if (!session) {
-        setUser(null);
-        setLoading(false);
-      }
+    // Sesión inicial explícita (cubre INITIAL_SESSION y arranque en frío)
+    supabase.auth.getSession().then(({ data }) => {
+      aplicarSesion(data.session);
     });
 
     return () => {
@@ -66,23 +107,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signup = async (email: string, password: string, nombre: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { nombre_completo: nombre } },
     });
     if (error) throw new Error(error.message);
+
+    // Si no hay confirmación de email activa, Supabase devuelve una sesión
+    // inmediata: iniciamos sesión automáticamente y cargamos el perfil.
+    if (data.session?.user) {
+      await sincronizarPerfil(data.session.user);
+      setLoading(false);
+    }
   };
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
-    navigate("/dashboard");
+    // Espera a tener el perfil antes de redirigir para evitar el rebote de PrivateRoute.
+    if (data.session?.user) {
+      const perfil = await sincronizarPerfil(data.session.user);
+      setLoading(false);
+      // Redirect condicional según el rol:
+      // vendedor/admin → Dashboard; comprador → catálogo/tienda.
+      const rol = perfil?.rol;
+      const destino = (rol === "vendedor" || rol === "admin") ? "/dashboard" : "/products";
+      navigate(destino);
+      return;
+    }
+    navigate("/products");
   };
 
   const resetPassword = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`, // A donde volverá el usuario tras hacer clic en el correo
+      redirectTo: `${window.location.origin}/update-password`,
     });
     if (error) throw new Error(error.message);
   };
@@ -91,13 +150,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
-    if (error) throw error; // el componente maneja el error y la redirección
+    if (error) throw error;
   };
 
   const logout = async () => {
-    setUser(null);           // ← limpia inmediatamente
-    setLoading(false);
     await supabase.auth.signOut();
+    setUser(null);
+    setLoading(false);
     navigate("/");
   };
 

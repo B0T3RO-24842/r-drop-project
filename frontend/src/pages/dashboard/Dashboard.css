@@ -239,6 +239,14 @@
 .table-row:last-child { border-bottom: none; }
 .table-row:hover { background: #141414; }
 
+.table-row.vacio {
+  grid-column: 1 / -1;
+  justify-content: center;
+  text-align: center;
+  color: #777;
+  letter-spacing: 0.01em;
+}
+
 .order-id {
   font-family: 'Syne', sans-serif;
   font-size: 0.85rem;
@@ -259,3 +267,122 @@
   }
   .order-date, .order-price { display: none; }
 }
+
+/* Modal: solicitud para hacerse vendedor */
+.solicitud-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.solicitud-modal {
+  position: relative;
+  background: #18181b;
+  border: 1px solid #2e2e33;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.solicitud-modal h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+  color: #fff;
+}
+
+.solicitud-sub {
+  color: #9ca3af;
+  font-size: 0.88rem;
+  margin: 0 0 1.25rem;
+}
+
+.solicitud-cerrar {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.solicitud-cerrar:hover { color: #fff; }
+
+.solicitud-msg {
+  background: #9B1C1C22;
+  border: 1px solid #9B1C1C44;
+  color: #fca5a5;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.solicitud-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.85rem;
+  color: #d1d5db;
+}
+
+.solicitud-label select,
+.solicitud-label input,
+.solicitud-label textarea {
+  background: #101012;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  color: #f3f4f6;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+.solicitud-label select:focus,
+.solicitud-label input:focus,
+.solicitud-label textarea:focus {
+  border-color: #aa3bff;
+}
+.solicitud-label textarea { resize: vertical; }
+
+.solicitud-botones {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.solicitud-cancel {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #d1d5db;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.solicitud-cancel:hover { background: #3f3f46; }
+
+.solicitud-enviar {
+  background: #aa3bff;
+  border: none;
+  color: #fff;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.solicitud-enviar:disabled { opacity: 0.6; cursor: not-allowed; }

@@ -10,5 +10,6 @@ router.get('/todos', controller.todos);
 router.get('/generos', controller.generos);
 router.get('/categorias', controller.categorias);
 router.get('/estados-producto', controller.estadosProducto);
+router.get('/tipos-documento', controller.tiposDocumento);
 
 export default router;

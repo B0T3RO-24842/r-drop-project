@@ -76,12 +76,76 @@ export interface Product {
   fotos: string[];
   disponible: boolean;
   vistas: number;
+  id_genero: number;
   created_at: string;
   // Objetos anidados del JOIN
   categoria?: Categoria;
   genero?: Genero;
   estado_producto?: EstadoProducto;
   vendedor?: Pick<User, 'id' | 'nombre_completo' | 'foto_perfil' | 'nivel_vendedor' | 'puntos_fiabilidad'>;
+}
+
+// --- Oferta ---
+
+export interface Oferta {
+  id_oferta: number;
+  id_producto: number;
+  comprador_id: string;
+  monto: number;
+  id_estado: number;
+  mensaje_oferta: string | null;
+  created_at: string;
+  aceptada_at: string | null;
+  rechazada_at: string | null;
+  // Objetos anidados
+  producto?: Pick<Product, 'id_producto' | 'titulo' | 'precio' | 'fotos' | 'id_genero' | 'vendedor_id'>;
+  comprador?: Pick<User, 'id' | 'nombre_completo' | 'foto_perfil'>;
+  estado?: Pick<EstadoOferta, 'id_estado' | 'nombre_estado'>;
+}
+
+export interface EstadoOferta {
+  id_estado: number;
+  nombre_estado: string;
+  descripcion: string | null;
+}
+
+// --- Desglose de comisión (transparencia, anti-GoTrendier) ---
+
+export interface DesgloseComision {
+  monto_total: number;
+  comision_porcentaje: number;
+  comision_monto: number;
+  monto_vendedor: number;
+}
+
+// --- Transacción ---
+
+export interface Transaccion {
+  id_transaccion: number;
+  id_oferta: number;
+  monto_total: number;
+  comision_porcentaje: number;
+  comision_monto: number;
+  monto_vendedor: number;
+  id_estado: number;
+  payment_intent_id: string | null;
+  tracking_number: string | null;
+  transportadora: string | null;
+  created_at: string;
+  pagado_at: string | null;
+  enviado_at: string | null;
+  entregado_at: string | null;
+  liberado_at: string | null;
+  // Objetos anidados
+  oferta?: Oferta;
+  estado?: Pick<EstadoTransaccion, 'id_estado' | 'nombre_estado'>;
+  desglose_comision?: DesgloseComision;
+}
+
+export interface EstadoTransaccion {
+  id_estado: number;
+  nombre_estado: string;
+  descripcion: string | null;
 }
 
 // --- Auth ---

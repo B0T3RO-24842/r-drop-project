@@ -12,10 +12,14 @@ const apiClient = axios.create({
 // Interceptor para agregar token de la sesión de Supabase
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch {
+      // Si la sesión falla por cualquier motivo, el request continúa sin token.
     }
     return config;
   },

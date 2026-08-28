@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { JWTPayload, jwtVerify } from 'jose';
-import { supabase } from '../config/supabase';
+import { JWTPayload, createRemoteJWKSet, jwtVerify } from 'jose';
 
 // Extender Request para incluir el usuario decodificado
 export interface AuthRequest extends Request {
@@ -10,13 +9,30 @@ export interface AuthRequest extends Request {
   };
 }
 
-// Secret del JWT de Supabase (lo sacamos del .env)
-const SUPABASE_JWT_SECRET = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
+/**
+ * Supabase firma los access tokens con ES256 (clave pública/privada).
+ * La clave pública de verificación se obtiene del JWKS del proyecto.
+ * NOTA: la URL del JWKS es https://<proyecto>.supabase.co/auth/v1/.well-known/jwks.json
+ * y requiere el apikey (anon/publishable) como query param para poder accederla.
+ */
+const supabaseUrl = process.env.SUPABASE_URL;
+// Anon/publishable key (pública) para acceder al JWKS de verificación.
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+function obtenerJwks() {
+  if (jwks) return jwks;
+  const url = `${supabaseUrl}/auth/v1/.well-known/jwks.json?apikey=${supabaseAnonKey}`;
+  jwks = createRemoteJWKSet(new URL(url), { cooldownDuration: 60_000 });
+  return jwks;
+}
 
 /**
  * Middleware de autenticación.
- * Verifica el Bearer token del header Authorization contra el JWT secret de Supabase.
- * Si es válido, decodifica el payload y lo adjunta a req.usuario.
+ * Verifica el Bearer token del header Authorization contra la firma ES256
+ * de Supabase (vía JWKS). Si es válido, decodifica el payload y lo adjunta
+ * a req.usuario.
  */
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -32,7 +48,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     const token = authHeader.split(' ')[1];
 
-    const { payload } = await jwtVerify(token, SUPABASE_JWT_SECRET);
+    const { payload } = await jwtVerify(token, obtenerJwks());
 
     req.usuario = {
       ...payload,

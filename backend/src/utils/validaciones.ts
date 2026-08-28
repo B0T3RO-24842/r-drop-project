@@ -26,3 +26,40 @@ export const ActualizarProductoSchema = z.object({
 }).refine((data) => Object.keys(data).length > 0, {
   message: 'Debes enviar al menos un campo para actualizar',
 });
+
+// =============================================
+// Ofertas
+// =============================================
+
+export const CrearOfertaSchema = z.object({
+  id_producto: z.number().int().positive(),
+  monto: z.number().positive('El monto de la oferta debe ser mayor a 0'),
+  mensaje_oferta: z.string().max(500).nullable().optional(),
+});
+
+// =============================================
+// Solicitud de vendedor
+// =============================================
+
+export const CrearSolicitudVendedorSchema = z.object({
+  numero_documento: z.string().min(3, 'El número de documento es requerido').max(50),
+  tipo_documento_id: z.number().int().positive('Selecciona un tipo de documento'),
+  foto_documento_frontal: z.string().url('Foto frontal inválida').nullable().optional(),
+  foto_documento_trasera: z.string().url('Foto trasera inválida').nullable().optional(),
+  selfie_con_documento: z.string().url('Selfie inválida').nullable().optional(),
+  ciudad: z.string().min(2, 'La ciudad es requerida').max(100),
+  direccion: z.string().min(5, 'La dirección es requerida').max(255),
+  descripcion_tienda: z.string().max(500).nullable().optional(),
+});
+
+// =============================================
+// Subir foto de producto
+// =============================================
+
+export const SubirFotoSchema = z.object({
+  base64: z.string()
+    .min(1, 'La imagen es requerida')
+    .max(11_000_000, 'La imagen es demasiado grande')
+    .refine((v) => !/\s/.test(v), 'La imagen en base64 es inválida'),
+  mime: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/gif']).optional(),
+});

@@ -1,8 +1,8 @@
 import { Response } from 'express';
+import { randomUUID } from 'crypto';
 import { supabase } from '../config/supabase';
 import { AuthRequest } from '../middlewares/auth';
 import { CrearProducto, ActualizarProducto } from '../types';
-
 // =============================================
 // GET /api/productos
 // Listar productos con filtros, búsqueda y paginación
@@ -245,4 +245,61 @@ export async function misProductos(req: AuthRequest, res: Response): Promise<voi
   }
 
   res.json({ success: true, data });
+}
+
+// =============================================
+// POST /api/productos/upload-foto
+// Subir una foto de producto a Supabase Storage (service_role bypasea RLS)
+// Recibe: { base64, mime } → devuelve la URL pública
+// =============================================
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
+export async function subirFoto(req: AuthRequest, res: Response): Promise<void> {
+  const userId = req.usuario!.id;
+  const { base64, mime = 'image/jpeg' } = (req.body ?? {}) as { base64?: string; mime?: string };
+
+  if (!base64 || typeof base64 !== 'string') {
+    res.status(400).json({ success: false, error: 'La imagen en base64 es requerida' });
+    return;
+  }
+
+  if (!MIME_TO_EXT[mime]) {
+    res.status(400).json({ success: false, error: 'Formato de imagen no soportado' });
+    return;
+  }
+
+  try {
+    const buffer = Buffer.from(base64, 'base64');
+    if (buffer.length === 0) {
+      res.status(400).json({ success: false, error: 'Imagen vacía' });
+      return;
+    }
+
+    const ext = MIME_TO_EXT[mime];
+    const path = `productos/${userId}/${Date.now()}-${randomUUID()}.${ext}`;
+
+    const { data: subida, error: errSubida } = await supabase.storage
+      .from('fotos-productos')
+      .upload(path, buffer, { contentType: mime, upsert: false });
+
+    if (errSubida || !subida) {
+      console.error('[Productos] Error al subir foto:', errSubida?.message);
+      res.status(500).json({ success: false, error: 'Error al subir la imagen' });
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('fotos-productos')
+      .getPublicUrl(subida.path);
+
+    res.status(201).json({ success: true, url: publicUrlData.publicUrl });
+  } catch (e) {
+    console.error('[Productos] Error subiendo foto:', (e as Error).message);
+    res.status(500).json({ success: false, error: 'Error al procesar la imagen' });
+  }
 }

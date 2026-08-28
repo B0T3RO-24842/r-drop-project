@@ -35,3 +35,25 @@ export async function misProductos(): Promise<ApiResponse<Product[]>> {
   const { data } = await apiClient.get('/productos/mis-productos');
   return data;
 }
+
+export interface CrearProductoPayload {
+  titulo: string;
+  descripcion: string;
+  precio: number;
+  id_categoria: number;
+  id_genero: number;
+  talla?: string | null;
+  id_estado_producto: number;
+  marca?: string | null;
+  fotos: string[];
+}
+
+export async function crearProducto(payload: CrearProductoPayload): Promise<ApiResponse<Product>> {
+  const { data } = await apiClient.post('/productos', payload);
+  return data;
+}
+
+export async function subirFotoProducto(base64: string, mime: string): Promise<ApiResponse<{ url: string }>> {
+  const { data } = await apiClient.post('/productos/upload-foto', { base64, mime });
+  return data;
+}
