@@ -23,3 +23,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Documentos internos de la actividad (no se suben al repo)
+GUION-EXPOSICION.txt
+PLAN-DESPLIEGUE-CLOUDFLARE.md
+requerimientosparavideo.txt
